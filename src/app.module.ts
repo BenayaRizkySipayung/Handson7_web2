@@ -1,13 +1,25 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { SingsModule } from './sings/sings.module';
-import { SongsService } from './songs/songs.service';
-import { SongsController } from './songs/songs.controller';
+import { SongsModule } from './songs/songs.module';
+import { LoggerMiddleware } from './logger.middleware';
+import { APP_GUARD } from '@nestjs/core';
+import { AuntGuard } from './auth.guard';
 
 @Module({
-  imports: [SingsModule],
-  controllers: [AppController, SongsController],
-  providers: [AppService, SongsService],
+  imports: [SongsModule],
+  controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuntGuard,
+  },
+  AppService
+  ],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('songs');
+  }
+}
